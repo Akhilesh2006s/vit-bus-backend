@@ -79,12 +79,17 @@ exports.updateTrackerLocation = async (req, res) => {
   }
 };
 
-// Get all active trackers
+// Get all trackers (including offline ones)
 exports.getAllTrackers = async (req, res) => {
   try {
-    const { routeId, busNumber, status } = req.query;
+    const { routeId, busNumber, status, onlineOnly } = req.query;
     
-    let query = { isOnline: true };
+    let query = {};
+    
+    // Only filter by online status if explicitly requested
+    if (onlineOnly === 'true') {
+      query.isOnline = true;
+    }
     
     if (routeId) query.routeId = routeId;
     if (busNumber) query.busNumber = busNumber;
@@ -242,6 +247,34 @@ exports.getTrackerDashboardSummary = async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching tracker dashboard summary:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+      error: error.message
+    });
+  }
+};
+
+// Get all trackers without any filtering (for debugging)
+exports.getAllTrackersDebug = async (req, res) => {
+  try {
+    const trackers = await Tracker.find({})
+      .sort({ trackerId: 1 })
+      .select('-__v');
+
+    res.status(200).json({
+      success: true,
+      data: trackers,
+      count: trackers.length,
+      debug: {
+        totalInDB: await Tracker.countDocuments({}),
+        onlineCount: await Tracker.countDocuments({ isOnline: true }),
+        offlineCount: await Tracker.countDocuments({ isOnline: false })
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching all trackers (debug):', error);
     res.status(500).json({
       success: false,
       message: 'Internal server error',

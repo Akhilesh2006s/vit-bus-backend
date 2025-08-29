@@ -7,7 +7,8 @@ const {
   getTrackerByRoute,
   updateTrackerStatus,
   getTrackerDashboardSummary,
-  deleteTracker
+  deleteTracker,
+  getAllTrackersDebug
 } = require('../controllers/trackerController');
 
 // Update tracker location
@@ -15,6 +16,9 @@ router.post('/update-location', updateTrackerLocation);
 
 // Get all active trackers
 router.get('/', getAllTrackers);
+
+// Get all trackers (debug endpoint - no filtering)
+router.get('/debug/all', getAllTrackersDebug);
 
 // Get tracker by ID
 router.get('/:trackerId', getTrackerById);
